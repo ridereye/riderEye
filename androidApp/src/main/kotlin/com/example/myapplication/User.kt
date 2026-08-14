@@ -1,3 +1,5 @@
+package com.example.myapplication
+
 data class User(
     val c_number: String = "",
     val email_add: String = "",

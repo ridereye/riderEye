@@ -1,3 +1,5 @@
+package com.example.myapplication
+
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -23,9 +25,9 @@ class SignUpActivity : AppCompatActivity() {
         val etFName = findViewById<android.widget.EditText>(R.id.et_fname)
         val etLName = findViewById<android.widget.EditText>(R.id.et_lname)
         val etMName = findViewById<android.widget.EditText>(R.id.et_mname)
-        val etGender = findViewById<android.widget.EditText>(R.id.et_gender)
+        val spinnerGender = findViewById<android.widget.Spinner>(R.id.spinner_gender)
         val etUsername = findViewById<android.widget.EditText>(R.id.et_username)
-        val etUserType = findViewById<android.widget.EditText>(R.id.et_usertype)
+        val spinnerUserType = findViewById<android.widget.Spinner>(R.id.spinner_usertype)
         val etPassword = findViewById<android.widget.EditText>(R.id.et_password)
         val btnSignUp = findViewById<android.widget.Button>(R.id.btn_signup)
 
@@ -35,9 +37,9 @@ class SignUpActivity : AppCompatActivity() {
             val fName = etFName.text.toString().trim()
             val lName = etLName.text.toString().trim()
             val mName = etMName.text.toString().trim()
-            val gender = etGender.text.toString().trim()
+            val gender = spinnerGender.selectedItem?.toString() ?: ""
             val username = etUsername.text.toString().trim()
-            val userType = etUserType.text.toString().trim()
+            val userType = spinnerUserType.selectedItem?.toString() ?: ""
             val password = etPassword.text.toString().trim()
 
             if (email.isEmpty() || username.isEmpty() || password.isEmpty()) {
