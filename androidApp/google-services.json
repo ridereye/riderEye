@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "320495145171",
+    "firebase_url": "https://ridereye-37831-default-rtdb.firebaseio.com",
+    "project_id": "ridereye-37831",
+    "storage_bucket": "ridereye-37831.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:320495145171:android:255489f97c56ae052c0426",
+        "android_client_info": {
+          "package_name": "com.example.myapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDndldAd-EGqjLJFChisKkd9-IfuzGIZaE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
