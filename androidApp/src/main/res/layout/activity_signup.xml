@@ -1,131 +1,182 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#0F0F14"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#F5F5F5"
-        android:gravity="center_horizontal"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="28dp"
+        android:gravity="center_horizontal">
+
+        <!-- LOGO HEADER -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="RIDER EYE PH"
+            android:textColor="#1E90FF"
+            android:textSize="28sp"
+            android:textStyle="bold|italic" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:text="Create Account"
-            android:textSize="28sp"
+            android:layout_marginTop="16dp"
+            android:text="SIGN UP"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
             android:textStyle="bold" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Create your account"
+            android:textColor="#8A8A8E"
+            android:textSize="12sp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- FIRST NAME -->
         <EditText
             android:id="@+id/et_fname"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginBottom="12dp"
-            android:backgroundTint="#666"
+            android:background="#1E1E28"
             android:hint="First Name"
+            android:textColorHint="#6E6E7A"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="16dp"
             android:inputType="textPersonName" />
 
-        <EditText
-            android:id="@+id/et_lname"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginBottom="12dp"
-            android:backgroundTint="#666"
-            android:hint="Last Name"
-            android:inputType="textPersonName" />
-
+        <!-- MIDDLE NAME -->
         <EditText
             android:id="@+id/et_mname"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginBottom="12dp"
-            android:backgroundTint="#666"
-            android:hint="Middle Name (Optional)"
+            android:background="#1E1E28"
+            android:hint="Middle Name"
+            android:textColorHint="#6E6E7A"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="16dp"
             android:inputType="textPersonName" />
 
+        <!-- LAST NAME -->
+        <EditText
+            android:id="@+id/et_lname"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="12dp"
+            android:background="#1E1E28"
+            android:hint="Last Name"
+            android:textColorHint="#6E6E7A"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="16dp"
+            android:inputType="textPersonName" />
+
+        <!-- CONTACT NUMBER -->
         <EditText
             android:id="@+id/et_cnumber"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginBottom="12dp"
-            android:backgroundTint="#666"
+            android:background="#1E1E28"
             android:hint="Contact Number"
+            android:textColorHint="#6E6E7A"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="16dp"
             android:inputType="phone" />
 
+        <!-- EMAIL -->
         <EditText
             android:id="@+id/et_email"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginBottom="12dp"
-            android:backgroundTint="#666"
+            android:background="#1E1E28"
             android:hint="Email Address"
+            android:textColorHint="#6E6E7A"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="16dp"
             android:inputType="textEmailAddress" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:text="Gender"
-            android:textSize="14sp" />
-
-        <Spinner
-            android:id="@+id/spinner_gender"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginBottom="12dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:text="User Type"
-            android:textSize="14sp" />
-
-        <Spinner
-            android:id="@+id/spinner_usertype"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginBottom="12dp" />
-
+        <!-- USERNAME -->
         <EditText
             android:id="@+id/et_username"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginBottom="12dp"
-            android:backgroundTint="#666"
+            android:background="#1E1E28"
             android:hint="Username"
+            android:textColorHint="#6E6E7A"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="16dp"
             android:inputType="text" />
 
+        <!-- GENDER SPINNER -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:text="Gender"
+            android:textColor="#8A8A8E"
+            android:textSize="12sp"
+            android:layout_marginBottom="4dp"/>
+
+        <Spinner
+            android:id="@+id/spinner_gender"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="12dp"
+            android:background="#1E1E28"
+            android:paddingHorizontal="12dp" />
+
+        <!-- USER TYPE SPINNER -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:text="User Type"
+            android:textColor="#8A8A8E"
+            android:textSize="12sp"
+            android:layout_marginBottom="4dp"/>
+
+        <Spinner
+            android:id="@+id/spinner_usertype"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="12dp"
+            android:background="#1E1E28"
+            android:paddingHorizontal="12dp" />
+
+        <!-- PASSWORD -->
         <EditText
             android:id="@+id/et_password"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginBottom="20dp"
-            android:backgroundTint="#666"
+            android:layout_marginBottom="24dp"
+            android:background="#1E1E28"
             android:hint="Password"
+            android:textColorHint="#6E6E7A"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="16dp"
             android:inputType="textPassword" />
 
+        <!-- REGISTER BUTTON -->
         <Button
             android:id="@+id/btn_signup"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:background="#2196F3"
-            android:text="SIGN UP"
-            android:textColor="#FFFFFF"
+            android:text="CREATE ACCOUNT"
             android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/btn_goto_login"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Already have account? Login here"
-            android:textColor="#2196F3"
-            android:textSize="14sp" />
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#990000"
+            android:layout_marginBottom="24dp" />
 
     </LinearLayout>
-</LinearLayout>
+</ScrollView>

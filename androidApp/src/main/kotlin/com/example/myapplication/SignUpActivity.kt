@@ -9,11 +9,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import android.widget.ArrayAdapter
 
 class SignUpActivity : AppCompatActivity() {
 
     private val db = FirebaseFirestore.getInstance()
-    private val passwordCollection = db.collection("password")
+    private val usersCollection = db.collection("users")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,9 +26,21 @@ class SignUpActivity : AppCompatActivity() {
         val etFName = findViewById<android.widget.EditText>(R.id.et_fname)
         val etLName = findViewById<android.widget.EditText>(R.id.et_lname)
         val etMName = findViewById<android.widget.EditText>(R.id.et_mname)
+
         val spinnerGender = findViewById<android.widget.Spinner>(R.id.spinner_gender)
+        // 1. Listahan ng Gender options
+        val genderOptions = arrayOf("Male", "Female", "Prefer not to say")
+        val genderAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, genderOptions)
+        spinnerGender.adapter = genderAdapter
+
         val etUsername = findViewById<android.widget.EditText>(R.id.et_username)
+
         val spinnerUserType = findViewById<android.widget.Spinner>(R.id.spinner_usertype)
+        // 2. Listahan ng User Type options
+        val userTypeOptions = arrayOf("Rider", "Family", "Admin")
+        val userTypeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, userTypeOptions)
+        spinnerUserType.adapter = userTypeAdapter
+
         val etPassword = findViewById<android.widget.EditText>(R.id.et_password)
         val btnSignUp = findViewById<android.widget.Button>(R.id.btn_signup)
 
@@ -61,7 +74,7 @@ class SignUpActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // Check if username already exists
-                val checkUser = passwordCollection
+                val checkUser = usersCollection
                     .whereEqualTo("user_name", username)
                     .get()
                     .await()
@@ -87,7 +100,7 @@ class SignUpActivity : AppCompatActivity() {
                 )
 
                 // Save to Firestore → auto-generates Document ID (like RH7eDYiniOrZfd4myFei)
-                passwordCollection.add(user).await()
+                usersCollection.add(user).await()
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@SignUpActivity, "Sign Up Success! 🎉", Toast.LENGTH_SHORT).show()

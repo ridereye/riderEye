@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0F0F14"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RIDER DASHBOARD"
+            android:textColor="#1E90FF"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Safety &amp; Ride Tracking Active"
+            android:textColor="#8A8A8E"
+            android:textSize="14sp"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- SOS EMERGENCY BUTTON -->
+        <Button
+            android:id="@+id/btn_sos"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:text="🚨 SEND SOS ALERT"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#CC0000"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- START RIDE TRACKING CARD -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#1E1E28"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Live Tracking"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Share real-time location with family"
+                android:textColor="#8A8A8E"
+                android:textSize="12sp"
+                android:layout_marginBottom="12dp"/>
+
+            <Button
+                android:id="@+id/btn_start_ride"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="START RIDE"
+                android:backgroundTint="#1E90FF"/>
+        </LinearLayout>
+
+        <!-- LOGOUT -->
+        <Button
+            android:id="@+id/btn_rider_logout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="LOGOUT"
+            android:textColor="#CCCCCC"
+            android:backgroundTint="#222230"
+            android:layout_marginTop="32dp"/>
+
+    </LinearLayout>
+</ScrollView>
