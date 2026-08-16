@@ -1,87 +1,374 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0F0F14"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="#07090E">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="20dp"
+        android:gravity="center_horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="RIDER DASHBOARD"
-            android:textColor="#1E90FF"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"/>
+        <!-- BIG CIRCULAR SOS BUTTON -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            app:cardCornerRadius="75dp"
+            app:cardBackgroundColor="#DC2626"
+            app:strokeColor="#EF4444"
+            app:strokeWidth="3dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="20dp"
+            android:elevation="10dp"
+            android:clickable="true"
+            android:focusable="true">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Safety &amp; Ride Tracking Active"
-            android:textColor="#8A8A8E"
-            android:textSize="14sp"
-            android:layout_marginBottom="24dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center">
 
-        <!-- SOS EMERGENCY BUTTON -->
-        <Button
-            android:id="@+id/btn_sos"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SOS"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:letterSpacing="0.1"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="HOLD • TAP"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFD1D1"
+                    android:letterSpacing="0.15"
+                    android:layout_marginTop="2dp"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- LOCATION CARD -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="80dp"
-            android:text="🚨 SEND SOS ALERT"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#CC0000"
-            android:layout_marginBottom="16dp"/>
-
-        <!-- START RIDE TRACKING CARD -->
-        <LinearLayout
-            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#1E1E28"
-            android:orientation="vertical"
-            android:padding="20dp"
-            android:layout_marginBottom="16dp">
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="#111827"
+            app:strokeColor="#1F2937"
+            app:strokeWidth="1dp"
+            android:layout_marginBottom="14dp"
+            app:cardElevation="4dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Live Tracking"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Share real-time location with family"
-                android:textColor="#8A8A8E"
-                android:textSize="12sp"
-                android:layout_marginBottom="12dp"/>
-
-            <Button
-                android:id="@+id/btn_start_ride"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="START RIDE"
-                android:backgroundTint="#1E90FF"/>
-        </LinearLayout>
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <!-- LOGOUT -->
-        <Button
-            android:id="@+id/btn_rider_logout"
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@android:drawable/ic_menu_mylocation"
+                        app:tint="#3B82F6"
+                        android:layout_marginRight="6dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="LOCATION"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#9CA3AF"
+                        android:letterSpacing="0.05"/>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvCoordinates"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="14.4791N 120.8978E"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginBottom="4dp"/>
+
+                <TextView
+                    android:id="@+id/tvLocationDetails"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bacoor, Cavite - GPS LOCKED - ±5m"
+                    android:textSize="12sp"
+                    android:textColor="#9CA3AF"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- TOGGLE ROW 1: AUTO ALARM GMAIL CONTACTS -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="LOGOUT"
-            android:textColor="#CCCCCC"
-            android:backgroundTint="#222230"
-            android:layout_marginTop="32dp"/>
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="#111827"
+            app:strokeColor="#1F2937"
+            app:strokeWidth="1dp"
+            android:layout_marginBottom="10dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="12dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AUTO ALARM GMAIL CONTACTS"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#D1D5DB"
+                    android:layout_centerVertical="true"
+                    android:layout_toLeftOf="@id/switchGmail"/>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchGmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"/>
+            </RelativeLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- TOGGLE ROW 2: SHARE LOCATION -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="#111827"
+            app:strokeColor="#1F2937"
+            app:strokeWidth="1dp"
+            android:layout_marginBottom="10dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="12dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SHARE LOCATION"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#D1D5DB"
+                    android:layout_centerVertical="true"/>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchShareLocation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:checked="true"/>
+            </RelativeLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- TOGGLE ROW 3: AUTO LINK SOS TO WORLD CHAT -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="#111827"
+            app:strokeColor="#1F2937"
+            app:strokeWidth="1dp"
+            android:layout_marginBottom="16dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="12dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AUTO LINK SOS TO WORLD CHAT"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#D1D5DB"
+                    android:layout_centerVertical="true"
+                    android:layout_toLeftOf="@id/switchWorldChat"/>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchWorldChat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:checked="true"/>
+            </RelativeLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- SHARE LINK CARD (BOTTOM) -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="#0B132B"
+            app:strokeColor="#2563EB"
+            app:strokeWidth="2dp"
+            app:cardElevation="6dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Title -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@android:drawable/ic_menu_share"
+                        app:tint="#3B82F6"
+                        android:layout_marginRight="8dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="YOUR SHARE LINK - COPY THIS!"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#60A5FA"
+                        android:letterSpacing="0.05"/>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="LIVE • 14.4791, 120.8978 • AUTO UPDATING"
+                    android:textSize="10sp"
+                    android:textColor="#9CA3AF"
+                    android:layout_marginBottom="10dp"/>
+
+                <!-- Link Box & Live Button Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="#1E293B"
+                    android:padding="10dp"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:id="@+id/tvShareLink"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="rider://FAM-RAPTOR-8821?lat=14.47"
+                        android:textSize="11sp"
+                        android:textColor="#93C5FD"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:layout_marginRight="8dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="LIVE"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:background="#1D4ED8"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp"/>
+                </LinearLayout>
+
+                <!-- Action Buttons: COPY LINK & QR CODE -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnCopyLink"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:text="COPY LINK"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        app:backgroundTint="#2563EB"
+                        app:cornerRadius="10dp"
+                        android:layout_marginRight="6dp"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnQrCode"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:text="QR CODE"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#D1D5DB"
+                        app:backgroundTint="#1E293B"
+                        app:strokeColor="#334155"
+                        app:strokeWidth="1dp"
+                        app:cornerRadius="10dp"
+                        android:layout_marginLeft="6dp"/>
+                </LinearLayout>
+
+                <!-- Footer instruction -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="#111827"
+                    android:padding="10dp">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@android:drawable/ic_menu_info_details"
+                        app:tint="#F59E0B"
+                        android:layout_marginRight="8dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Paste this link to Family Eye app → AUTO CONNECT LINK field • Instant family tracking ON"
+                        android:textSize="9sp"
+                        android:textColor="#D1D5DB"/>
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 </ScrollView>

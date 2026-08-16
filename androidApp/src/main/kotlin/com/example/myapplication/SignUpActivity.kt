@@ -1,6 +1,10 @@
 package com.example.myapplication
 
 import android.os.Bundle
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
@@ -9,7 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import android.widget.ArrayAdapter
 
 class SignUpActivity : AppCompatActivity() {
 
@@ -20,29 +23,26 @@ class SignUpActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_signup)
 
-        // --- Wire your EditText IDs from your layout ---
-        val etCNumber = findViewById<android.widget.EditText>(R.id.et_cnumber)
-        val etEmail = findViewById<android.widget.EditText>(R.id.et_email)
-        val etFName = findViewById<android.widget.EditText>(R.id.et_fname)
-        val etLName = findViewById<android.widget.EditText>(R.id.et_lname)
-        val etMName = findViewById<android.widget.EditText>(R.id.et_mname)
+        val etCNumber = findViewById<EditText>(R.id.et_cnumber)
+        val etEmail = findViewById<EditText>(R.id.et_email)
+        val etFName = findViewById<EditText>(R.id.et_fname)
+        val etLName = findViewById<EditText>(R.id.et_lname)
+        val etMName = findViewById<EditText>(R.id.et_mname)
 
-        val spinnerGender = findViewById<android.widget.Spinner>(R.id.spinner_gender)
-        // 1. Listahan ng Gender options
+        val spinnerGender = findViewById<Spinner>(R.id.spinner_gender)
         val genderOptions = arrayOf("Male", "Female", "Prefer not to say")
         val genderAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, genderOptions)
         spinnerGender.adapter = genderAdapter
 
-        val etUsername = findViewById<android.widget.EditText>(R.id.et_username)
+        val etUsername = findViewById<EditText>(R.id.et_username)
 
-        val spinnerUserType = findViewById<android.widget.Spinner>(R.id.spinner_usertype)
-        // 2. Listahan ng User Type options
+        val spinnerUserType = findViewById<Spinner>(R.id.spinner_usertype)
         val userTypeOptions = arrayOf("Rider", "Family", "Admin")
         val userTypeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, userTypeOptions)
         spinnerUserType.adapter = userTypeAdapter
 
-        val etPassword = findViewById<android.widget.EditText>(R.id.et_password)
-        val btnSignUp = findViewById<android.widget.Button>(R.id.btn_signup)
+        val etPassword = findViewById<EditText>(R.id.et_password)
+        val btnSignUp = findViewById<Button>(R.id.btn_signup)
 
         btnSignUp.setOnClickListener {
             val cNumber = etCNumber.text.toString().trim()
@@ -86,7 +86,12 @@ class SignUpActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                // Create user object
+                // 1. AUTO-GENERATE RIDER ID & FAMILY CODE FOR RIDERS
+                val randomNum = (1000..9999).random()
+                val riderId = if (userType == "Rider") "RAPTOR_X-$randomNum" else ""
+                val familyCode = if (userType == "Rider") "FAM-RAPTOR-$randomNum" else ""
+
+                // 2. CREATE USER OBJECT WITH GENERATED CODES
                 val user = User(
                     c_number = cNumber,
                     email_add = email,
@@ -96,14 +101,21 @@ class SignUpActivity : AppCompatActivity() {
                     gender = gender,
                     user_name = username,
                     user_type = userType,
-                    password = password
+                    password = password,
+                    rider_id = riderId,
+                    family_code = familyCode
                 )
 
-                // Save to Firestore → auto-generates Document ID (like RH7eDYiniOrZfd4myFei)
+                // Save to Firestore
                 usersCollection.add(user).await()
 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@SignUpActivity, "Sign Up Success! 🎉", Toast.LENGTH_SHORT).show()
+                    val message = if (userType == "Rider") {
+                        "Sign Up Success! 🎉 Your Family Code: $familyCode"
+                    } else {
+                        "Sign Up Success! 🎉"
+                    }
+                    Toast.makeText(this@SignUpActivity, message, Toast.LENGTH_LONG).show()
                     finish() // Go back to Login
                 }
 

@@ -9,5 +9,7 @@ data class User(
     val gender: String = "",
     val user_name: String = "",
     val user_type: String = "",
-    val password: String = ""
+    val password: String = "",
+    val rider_id: String = "",
+    val family_code: String = ""
 )

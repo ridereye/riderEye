@@ -1,76 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0F0F14"
-    android:fillViewport="true">
+    android:orientation="vertical"
+    android:padding="20dp">
 
+    <!-- SOS BANNER -->
     <LinearLayout
+        android:id="@+id/layout_sos_banner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#FF1744"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="16dp"
+        android:visibility="gone"
+        android:layout_marginBottom="16dp">
 
         <TextView
+            android:id="@+id/tv_sos_message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="FAMILY MONITORING"
-            android:textColor="#1E90FF"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"/>
+            android:text="🚨 EMERGENCY ALERT!"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Keep track of your rider's safety"
-            android:textColor="#8A8A8E"
-            android:textSize="14sp"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- STATUS CARD -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#1E1E28"
-            android:orientation="vertical"
-            android:padding="20dp"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Rider Status: OFFLINE"
-                android:textColor="#FFCC00"
-                android:textSize="16sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="No active ride broadcast at the moment."
-                android:textColor="#8A8A8E"
-                android:textSize="12sp"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="12dp"/>
-
-            <Button
-                android:id="@+id/btn_track_location"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="VIEW LIVE MAP"
-                android:backgroundTint="#1E90FF"/>
-        </LinearLayout>
-
-        <!-- LOGOUT -->
         <Button
-            android:id="@+id/btn_family_logout"
-            android:layout_width="match_parent"
+            android:id="@+id/btn_clear_sos"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="LOGOUT"
-            android:textColor="#CCCCCC"
-            android:backgroundTint="#222230"
-            android:layout_marginTop="32dp"/>
-
+            android:text="DISMISS ALERT"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#B00020"
+            android:layout_marginTop="8dp"/>
     </LinearLayout>
-</ScrollView>
+
+    <!-- LINK RIDER SECTION -->
+    <EditText
+        android:id="@+id/et_rider_username"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Rider Username"
+        android:textColorHint="#8A8A8E"
+        android:textColor="#FFFFFF"
+        android:padding="12dp"
+        android:background="#1E1E28"
+        android:layout_marginBottom="10dp"/>
+
+    <Button
+        android:id="@+id/btn_link_rider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="LINK RIDER"
+        android:backgroundTint="#1E90FF"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/tv_linked_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No Rider Linked Yet"
+        android:textColor="#00E676"
+        android:textSize="16sp"
+        android:layout_marginBottom="24dp"/>
+
+    <!-- ACTION BUTTONS -->
+    <Button
+        android:id="@+id/btn_track_location"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="📍 VIEW LIVE MAP"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="#1E90FF"
+        android:layout_marginBottom="12dp"/>
+
+    <Button
+        android:id="@+id/btn_history"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="📜 VIEW RIDE HISTORY"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="#1E90FF"
+        android:layout_marginBottom="24dp"/>
+
+    <Button
+        android:id="@+id/btn_family_logout"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="LOGOUT"
+        android:textColor="#CCCCCC"
+        android:backgroundTint="#222230"/>
+
+</LinearLayout>

@@ -15,8 +15,11 @@ dependencies {
     implementation(project(":shared"))
 
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.constraintlayout)
 
     implementation(libs.compose.uiToolingPreview)
+    implementation(libs.material)
     debugImplementation(libs.compose.uiTooling)
 
     // IDINAGDAG
@@ -25,6 +28,8 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.1.0")
 }
 
 android {

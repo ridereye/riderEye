@@ -19,6 +19,7 @@ class AdminHomeActivity : AppCompatActivity() {
         }
 
         btnLogout.setOnClickListener {
+            SessionManager(this).clearSession()
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
