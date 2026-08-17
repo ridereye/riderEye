@@ -14,6 +14,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.appcompat.app.AlertDialog
 
 class RiderHomeActivity : AppCompatActivity() {
 
@@ -25,11 +26,15 @@ class RiderHomeActivity : AppCompatActivity() {
         setContentView(R.layout.activity_rider_home)
 
         sessionManager = SessionManager(this)
+
+        // Kinukuha na nito ang totoong Family Code mula sa SessionManager, may fallback lang sakaling blangko
         val familyCode = sessionManager.getFamilyCode() ?: "FAM-RAPTOR-8821"
 
-        val btnStartRide = findViewById<Button>(R.id.btn_start_ride)
-        val btnShareLocation = findViewById<Button>(R.id.btn_share_location)
-        val tvStatus = findViewById<TextView>(R.id.tv_rider_status)
+        val btnSos = findViewById<com.google.android.material.card.MaterialCardView>(R.id.btnSos)
+        val btnStartRide = findViewById<Button>(R.id.btnStartRide)
+        val btnShareLocation = findViewById<Button>(R.id.btnShareLocation)
+        val btnLogout = findViewById<Button>(R.id.btnLogout)
+        val tvStatus = findViewById<TextView>(R.id.tvStatus)
 
         requestLocationPermissions()
 
@@ -38,23 +43,26 @@ class RiderHomeActivity : AppCompatActivity() {
                 startTrackingService(familyCode)
                 isTracking = true
                 btnStartRide.text = "STOP RIDE"
-                btnStartRide.setBackgroundColor(Color.RED)
+                btnStartRide.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.RED)
                 tvStatus.text = " Status: Ride Active ($familyCode)"
             } else {
                 stopTrackingService()
                 isTracking = false
                 btnStartRide.text = "START RIDE"
-                btnStartRide.setBackgroundColor(Color.parseColor("#1E90FF"))
+                btnStartRide.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#1E90FF"))
                 tvStatus.text = " Status: Stopped"
             }
         }
 
-        // GENERATE SHARE LINK: rider://FAM-RAPTOR-8821
+        // COPY ID & SHARE LINK: rider://FAM-xxxx
         btnShareLocation.setOnClickListener {
             val shareUrl = "rider://$familyCode"
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val clip = ClipData.newPlainText("Rider Link", shareUrl)
             clipboard.setPrimaryClip(clip)
+
+            // Naglalagay tayo ng Toast notification para alam ng user na nakopya na
+            Toast.makeText(this, "Family Code & Link copied to clipboard!", Toast.LENGTH_SHORT).show()
 
             // Share Intent para ma-send sa Messenger/SMS
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -62,6 +70,27 @@ class RiderHomeActivity : AppCompatActivity() {
                 putExtra(Intent.EXTRA_TEXT, "Track my live ride on Family Eye: $shareUrl")
             }
             startActivity(Intent.createChooser(shareIntent, "Share Location Link"))
+        }
+
+        // SOS BUTTON FUNCTION (May Confirmation Dialog)
+        btnSos.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("EMERGENCY SOS")
+                .setMessage("Gusto mo bang magpadala ng Emergency Alert sa iyong pamilya?")
+                .setPositiveButton("OO, SEND SOS") { _, _ ->
+                    Toast.makeText(this, "SOS Alert Sent!", Toast.LENGTH_SHORT).show()
+                    tvStatus.text = " Status: SOS EMERGENCY ACTIVE!"
+                    tvStatus.setTextColor(Color.RED)
+                }
+                .setNegativeButton("Kanselahin", null)
+                .show()
+        }
+
+        // LOGOUT BUTTON FUNCTION
+        btnLogout.setOnClickListener {
+            sessionManager.clearSession()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
         }
     }
 

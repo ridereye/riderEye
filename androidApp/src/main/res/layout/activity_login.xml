@@ -34,7 +34,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Login your account"
+            android:text="Login your account to continue"
             android:textColor="#8A8A8E"
             android:textSize="12sp"
             android:layout_marginBottom="32dp" />
@@ -57,7 +57,7 @@
             android:id="@+id/et_password"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="8dp"
             android:background="#1E1E28"
             android:hint="Password"
             android:textColorHint="#6E6E7A"
@@ -72,7 +72,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:text="Forgot Password?"
-            android:textColor="#FF4D4D"
+            android:textColor="#1E90FF"
             android:textSize="13sp"
             android:padding="4dp"
             android:layout_marginBottom="28dp"
@@ -98,8 +98,9 @@
             android:layout_height="52dp"
             android:text="CREATE ACCOUNT"
             android:textSize="14sp"
-            android:textColor="#CCCCCC"
-            android:backgroundTint="#222230" />
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#1E1E28" />
 
     </LinearLayout>
 </ScrollView>

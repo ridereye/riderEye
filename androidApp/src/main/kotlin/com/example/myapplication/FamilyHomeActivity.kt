@@ -130,7 +130,9 @@ class FamilyHomeActivity : AppCompatActivity() {
                     .await()
 
                 if (!riderResult.isEmpty) {
-                    val riderName = riderResult.documents[0].getString("user_name") ?: "Rider"
+                    val riderDocument = riderResult.documents[0]
+                    val riderName = riderDocument.getString("user_name") ?: "Rider"
+                    val riderId = riderDocument.getString("rider_id") ?: ""
 
                     // Auto add System Message sa Family Chat
                     val sysMsg = hashMapOf(
@@ -143,10 +145,15 @@ class FamilyHomeActivity : AppCompatActivity() {
 
                     withContext(Dispatchers.Main) {
                         connectedFamilyCode = familyCode
+
+                        // 👈 In-adjust natin ito para tumugma sa bagong saveSession parameters mo
                         sessionManager.saveSession(
+                            userId = sessionManager.getRiderId() ?: "",
                             username = sessionManager.getUsername() ?: "Family",
                             userType = "Family",
-                            familyCode = familyCode
+                            riderId = riderId,
+                            familyCode = familyCode,
+                            fullName = sessionManager.getFullName() ?: "Family User"
                         )
 
                         tvStatus.text = " Connected to: $riderName ($familyCode)"
@@ -202,7 +209,6 @@ class FamilyHomeActivity : AppCompatActivity() {
 
                 val active = snapshot.getBoolean("active") ?: false
                 if (active) {
-                    val time = snapshot.getLong("time") ?: System.currentTimeMillis()
                     tvSosMessage.text = "🚨 RIDER SOS ALERT! Triggered at $familyCode"
                     layoutSosBanner.visibility = View.VISIBLE
                 } else {

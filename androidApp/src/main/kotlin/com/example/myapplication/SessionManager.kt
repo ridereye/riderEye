@@ -14,20 +14,23 @@ class SessionManager(context: Context) {
         private const val KEY_RIDER_ID = "rider_id"
     }
 
-    fun saveSession(username: String, userType: String, familyCode: String? = null, riderId: String? = null) {
+    fun saveSession(userId: String, username: String, userType: String, riderId: String, familyCode: String, fullName: String) {
         val editor = prefs.edit()
-        editor.putBoolean(KEY_IS_LOGGED_IN, true) // Idinagdag para sa auto-login check
-        editor.putString(KEY_USERNAME, username)
-        editor.putString(KEY_USER_TYPE, userType)
-        familyCode?.let { editor.putString(KEY_FAMILY_CODE, it) }
-        riderId?.let { editor.putString(KEY_RIDER_ID, it) }
+        editor.putString("USER_DOC_ID", userId)
+        editor.putString("USER_NAME", username)
+        editor.putString("USER_TYPE", userType)
+        editor.putString("RIDER_ID", riderId)
+        editor.putString("FAMILY_CODE", familyCode)
+        editor.putString("FULL_NAME", fullName)
+        editor.putBoolean("IS_LOGGED_IN", true)
         editor.apply()
     }
 
     // Idinagdag para mawala ang error sa LoginActivity
     fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
 
-    fun getUsername(): String? = prefs.getString(KEY_USERNAME, null)
+    fun getUsername(): String? { return prefs.getString("FULL_NAME", null) }
+    fun getFullName(): String? = prefs.getString(KEY_USERNAME, null)
     fun getUserType(): String? = prefs.getString(KEY_USER_TYPE, null)
     fun getFamilyCode(): String? = prefs.getString(KEY_FAMILY_CODE, null)
     fun getRiderId(): String? = prefs.getString(KEY_RIDER_ID, null)

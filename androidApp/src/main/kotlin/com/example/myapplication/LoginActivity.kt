@@ -73,11 +73,23 @@ class LoginActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     if (!result.isEmpty) {
                         val document = result.documents[0]
+                        val firestoreId = document.id // 👈 Kinuha natin ang Document ID!
                         val userType = document.getString("user_type") ?: ""
+                        val riderId = document.getString("rider_id") ?: ""
+                        val familyCode = document.getString("family_code") ?: ""
+                        val fName = document.getString("f_name") ?: ""
 
-                        sessionManager.saveSession(username, userType)
+                        // 👈 I-save lahat kasama ang mga ID sa SessionManager
+                        sessionManager.saveSession(
+                            userId = firestoreId,
+                            username = username,
+                            userType = userType,
+                            riderId = riderId,
+                            familyCode = familyCode,
+                            fullName = fName
+                        )
 
-                        Toast.makeText(this@LoginActivity, "Welcome $username!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@LoginActivity, "Welcome back, $fName! 🎉", Toast.LENGTH_SHORT).show()
 
                         redirectToDashboard(userType)
                         finish() // Isara ang Login screen
