@@ -19,7 +19,9 @@ class HistoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_history)
 
-        val riderUsername = intent.getStringExtra("RIDER_USERNAME") ?: ""
+        // Sinasalo na nito ang KEY_RIDER_ID na galing sa FamilyHomeActivity
+        val riderId = intent.getStringExtra("KEY_RIDER_ID")
+            ?: intent.getStringExtra("RIDER_USERNAME") ?: ""
 
         val rvLogs = findViewById<RecyclerView>(R.id.rv_ride_logs)
         val btnBack = findViewById<Button>(R.id.btn_back_history)
@@ -30,17 +32,18 @@ class HistoryActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener { finish() }
 
-        if (riderUsername.isNotEmpty()) {
-            loadRideHistory(riderUsername)
+        if (riderId.isNotEmpty()) {
+            loadRideHistory(riderId)
         } else {
             Toast.makeText(this, "No linked rider specified!", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun loadRideHistory(username: String) {
-        db.collection("ride_logs")
-            .whereEqualTo("rider_username", username)
-            .orderBy("start_time", Query.Direction.DESCENDING)
+    private fun loadRideHistory(riderId: String) {
+        // Binago natin ang path papunta sa tamang Firestore structure (families/{riderId}/logs)
+        db.collection("families").document(riderId)
+            .collection("logs")
+            .orderBy("timestamp", Query.Direction.DESCENDING) // Pinalitan din ang start_time ng timestamp base sa TrackingService mo
             .addSnapshotListener { snapshot, e ->
                 if (e != null || snapshot == null) return@addSnapshotListener
 

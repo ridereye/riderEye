@@ -28,9 +28,10 @@ class RideLogAdapter(private val logList: List<RideLog>) :
         val log = logList[position]
         val sdf = SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault())
 
-        holder.tvStatus.text = "Status: ${log.status}"
-        holder.tvStart.text = "Start: ${log.start_time?.let { sdf.format(Date(it)) } ?: "N/A"}"
-        holder.tvEnd.text = "End: ${log.end_time?.let { sdf.format(Date(it)) } ?: "In Progress..."}"
+        // Ipinapasa natin ang mga bagong fields sa iyong existing TextViews
+        holder.tvStatus.text = "Speed: ${log.speed} km/h"
+        holder.tvStart.text = "Timestamp: ${sdf.format(Date(log.timestamp))}"
+        holder.tvEnd.text = "Stop duration: ${log.stop_duration}"
     }
 
     override fun getItemCount(): Int = logList.size

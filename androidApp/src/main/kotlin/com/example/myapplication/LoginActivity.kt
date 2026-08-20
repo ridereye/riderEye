@@ -13,6 +13,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import androidx.lifecycle.lifecycleScope
+import org.mindrot.jbcrypt.BCrypt
 
 class LoginActivity : AppCompatActivity() {
 
@@ -62,38 +64,46 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun loginUser(username: String, password: String) {
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
+                // 1. Hanapin muna ang user gamit ang username lang
                 val result = usersCollection
                     .whereEqualTo("user_name", username)
-                    .whereEqualTo("password", password)
                     .get()
                     .await()
 
                 withContext(Dispatchers.Main) {
                     if (!result.isEmpty) {
                         val document = result.documents[0]
-                        val firestoreId = document.id // 👈 Kinuha natin ang Document ID!
-                        val userType = document.getString("user_type") ?: ""
-                        val riderId = document.getString("rider_id") ?: ""
-                        val familyCode = document.getString("family_code") ?: ""
-                        val fName = document.getString("f_name") ?: ""
+                        val hashedPasswordFromDB = document.getString("password") ?: ""
 
-                        // 👈 I-save lahat kasama ang mga ID sa SessionManager
-                        sessionManager.saveSession(
-                            userId = firestoreId,
-                            username = username,
-                            userType = userType,
-                            riderId = riderId,
-                            familyCode = familyCode,
-                            fullName = fName
-                        )
+                        // 2. I-check kung nagtutugma ang tinype na password sa hash sa DB
+                        if (BCrypt.checkpw(password, hashedPasswordFromDB)) {
+                            // TAMA ANG PASSWORD!
+                            val firestoreId = document.id
+                            val userType = document.getString("user_type") ?: ""
+                            val riderId = document.getString("rider_id") ?: ""
+                            val familyCode = document.getString("family_code") ?: ""
+                            val fName = document.getString("f_name") ?: ""
 
-                        Toast.makeText(this@LoginActivity, "Welcome back, $fName! 🎉", Toast.LENGTH_SHORT).show()
+                            sessionManager.saveSession(
+                                userId = firestoreId,
+                                username = username,
+                                userType = userType,
+                                riderId = riderId,
+                                familyCode = familyCode,
+                                fullName = fName
+                            )
 
-                        redirectToDashboard(userType)
-                        finish() // Isara ang Login screen
+                            Toast.makeText(this@LoginActivity, "Welcome back, $fName! 🎉", Toast.LENGTH_SHORT).show()
+                            redirectToDashboard(userType)
+                            finish()
+                        } else {
+                            // MALING PASSWORD
+                            Toast.makeText(this@LoginActivity, "Invalid Username or Password", Toast.LENGTH_SHORT).show()
+                        }
                     } else {
+                        // WALANG GANITONG USERNAME
                         Toast.makeText(this@LoginActivity, "Invalid Username or Password", Toast.LENGTH_SHORT).show()
                     }
                 }

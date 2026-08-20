@@ -1,8 +1,9 @@
 package com.example.myapplication
 
 data class RideLog(
-    val rider_username: String = "",
-    val start_time: Long? = null,
-    val end_time: Long? = null,
-    val status: String = ""
+    val timestamp: Long = 0L,
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val speed: Int = 0,
+    val stop_duration: String = ""
 )

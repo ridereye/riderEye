@@ -12,6 +12,7 @@ kotlin {
     }
 }
 dependencies {
+    implementation("org.mindrot:jbcrypt:0.4")
     implementation(project(":shared"))
 
     implementation(libs.androidx.activity.compose)

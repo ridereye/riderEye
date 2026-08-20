@@ -15,10 +15,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.appcompat.app.AlertDialog
+import com.google.firebase.firestore.FirebaseFirestore
 
 class RiderHomeActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
+    private val db = FirebaseFirestore.getInstance() // Ibinahagi natin ang Firestore instance
     private var isTracking = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,8 +29,8 @@ class RiderHomeActivity : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
 
-        // Kinukuha na nito ang totoong Family Code mula sa SessionManager, may fallback lang sakaling blangko
-        val familyCode = sessionManager.getFamilyCode() ?: "FAM-RAPTOR-8821"
+        // Kinukuha na nito ang totoong Family/Rider ID mula sa SessionManager
+        val riderId = sessionManager.getRiderId() ?: ""
 
         val btnSos = findViewById<com.google.android.material.card.MaterialCardView>(R.id.btnSos)
         val btnStartRide = findViewById<Button>(R.id.btnStartRide)
@@ -40,11 +42,11 @@ class RiderHomeActivity : AppCompatActivity() {
 
         btnStartRide.setOnClickListener {
             if (!isTracking) {
-                startTrackingService(familyCode)
+                startTrackingService(riderId)
                 isTracking = true
                 btnStartRide.text = "STOP RIDE"
                 btnStartRide.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.RED)
-                tvStatus.text = " Status: Ride Active ($familyCode)"
+                tvStatus.text = " Status: Ride Active ($riderId)"
             } else {
                 stopTrackingService()
                 isTracking = false
@@ -56,15 +58,13 @@ class RiderHomeActivity : AppCompatActivity() {
 
         // COPY ID & SHARE LINK: rider://FAM-xxxx
         btnShareLocation.setOnClickListener {
-            val shareUrl = "rider://$familyCode"
+            val shareUrl = "rider://$riderId"
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val clip = ClipData.newPlainText("Rider Link", shareUrl)
             clipboard.setPrimaryClip(clip)
 
-            // Naglalagay tayo ng Toast notification para alam ng user na nakopya na
-            Toast.makeText(this, "Family Code & Link copied to clipboard!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Rider ID copied to clipboard!", Toast.LENGTH_SHORT).show()
 
-            // Share Intent para ma-send sa Messenger/SMS
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, "Track my live ride on Family Eye: $shareUrl")
@@ -72,17 +72,36 @@ class RiderHomeActivity : AppCompatActivity() {
             startActivity(Intent.createChooser(shareIntent, "Share Location Link"))
         }
 
-        // SOS BUTTON FUNCTION (May Confirmation Dialog)
+        // SOS BUTTON FUNCTION (Nagsusulat na ngayon sa Firestore)
         btnSos.setOnClickListener {
+            if (riderId.isEmpty()) {
+                Toast.makeText(this, "Error: Rider ID is missing!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             AlertDialog.Builder(this)
                 .setTitle("EMERGENCY SOS")
-                .setMessage("Gusto mo bang magpadala ng Emergency Alert sa iyong pamilya?")
-                .setPositiveButton("OO, SEND SOS") { _, _ ->
-                    Toast.makeText(this, "SOS Alert Sent!", Toast.LENGTH_SHORT).show()
-                    tvStatus.text = " Status: SOS EMERGENCY ACTIVE!"
-                    tvStatus.setTextColor(Color.RED)
+                .setMessage("Do you want to send an Emergency Alert to your family?")
+                .setPositiveButton("YES, SEND SOS") { _, _ ->
+                    // Sine-save natin sa tamang path ng Firestore para mabasa ng Family App
+                    val sosData = hashMapOf(
+                        "active" to true,
+                        "timestamp" to System.currentTimeMillis()
+                    )
+
+                    db.collection("families").document(riderId)
+                        .collection("sos").document("alert")
+                        .set(sosData)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "SOS Alert Sent to Family! 🚨", Toast.LENGTH_SHORT).show()
+                            tvStatus.text = " Status: SOS EMERGENCY ACTIVE!"
+                            tvStatus.setTextColor(Color.RED)
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Failed to send SOS: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
                 }
-                .setNegativeButton("Kanselahin", null)
+                .setNegativeButton("CANCEL", null)
                 .show()
         }
 
@@ -117,9 +136,15 @@ class RiderHomeActivity : AppCompatActivity() {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             permissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
         ActivityCompat.requestPermissions(this, permissions.toTypedArray(), 101)
     }
 }
