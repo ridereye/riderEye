@@ -19,6 +19,7 @@ class TrackingService : Service() {
     private val db = FirebaseFirestore.getInstance()
     private var familyCode: String = ""
     private var stopStartTime: Long = 0
+    private var hasLoggedStop = false // <-- Idinagdag para iwas-spam sa Firestore logs
 
     companion object {
         const val CHANNEL_ID = "rider_tracking_channel"
@@ -78,17 +79,21 @@ class TrackingService : Service() {
             "timestamp" to now
         )
 
-        // 1. Update Current Location Node
+        // 1. Update Current Location Node (Live location laging nau-update)
         db.collection("families").document(familyCode)
             .collection("location").document("current")
             .set(locationData)
 
-        // 2. Trip Log Tracking (Kapag huminto ang rider)
+        // 2. Trip Log Tracking (Isang beses lang maglalagay ng log kada hinto kapag umabot ng 1 minuto)
         if (speed == 0) {
-            if (stopStartTime == 0L) stopStartTime = now
+            if (stopStartTime == 0L) {
+                stopStartTime = now
+                hasLoggedStop = false // I-reset kapag bagong hinto
+            }
             val stopDurationMinutes = ((now - stopStartTime) / 60000).toInt()
 
-            if (stopDurationMinutes >= 1) { // Log stop after 1 minute
+            // Mag-log lang kapag umabot ng 1 min at HINDI PA na-log ang pagka-hritong ito
+            if (stopDurationMinutes >= 1 && !hasLoggedStop) {
                 val logEntry = hashMapOf(
                     "timestamp" to now,
                     "latitude" to lat,
@@ -98,9 +103,12 @@ class TrackingService : Service() {
                 )
                 db.collection("families").document(familyCode)
                     .collection("logs").add(logEntry)
+
+                hasLoggedStop = true // I-lock para hindi na paulit-ulit magdagdag habang nakatigil pa rin
             }
         } else {
-            stopStartTime = 0L // Reset stop timer when riding
+            stopStartTime = 0L // Reset stop timer kapag umandar na ulit
+            hasLoggedStop = false // I-reset ang flag para sa susunod na hinto
         }
     }
 
