@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.BatteryManager
 import android.os.Bundle
@@ -14,6 +15,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -26,6 +28,8 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polyline // 👈 Para sa blue route highlight line
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.net.HttpURLConnection
@@ -37,6 +41,8 @@ class MapFragment : Fragment(R.layout.fragment_map) {
 
     private lateinit var mapView: MapView
     private var myLocationOverlay: MyLocationNewOverlay? = null
+    private var currentDestinationMarker: Marker? = null
+    private var currentRoutePolyline: Polyline? = null // 👈 Taguan ng lumang route line para ma-clear
     private lateinit var sessionManager: SessionManager
     private val db = FirebaseFirestore.getInstance()
 
@@ -44,14 +50,23 @@ class MapFragment : Fragment(R.layout.fragment_map) {
     private var tvBattery: TextView? = null
     private var tvDistanceEta: TextView? = null
     private var recyclerHospitals: RecyclerView? = null
-    private lateinit var hospitalAdapter: HospitalAdapter
+    private lateinit var placeAdapter: NearbyPlaceAdapter
 
     private val handler = Handler(Looper.getMainLooper())
     private val LOCATION_PERMISSION_REQUEST_CODE = 101
 
-    data class Hospital(val name: String, val lat: Double, val lon: Double, val phone: String, var distanceKm: Double = 0.0)
-    private var nearestHospitals: List<Hospital> = listOf()
-    private var lastHospitalFetchTime: Long = 0
+    data class NearbyPlace(
+        val name: String,
+        val type: String,
+        val lat: Double,
+        val lon: Double,
+        val phone: String,
+        var distanceKm: Double = 0.0,
+        val hasRealPhone: Boolean = true
+    )
+
+    private var nearestPlaces: List<NearbyPlace> = listOf()
+    private var lastPlaceFetchTime: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,10 +87,9 @@ class MapFragment : Fragment(R.layout.fragment_map) {
         tvDistanceEta = view.findViewById(R.id.tv_distance_eta)
         recyclerHospitals = view.findViewById(R.id.recycler_hospitals)
 
-        // Setup RecyclerView para sa patong-patong na 4 na ospital
         recyclerHospitals?.layoutManager = LinearLayoutManager(requireContext())
-        hospitalAdapter = HospitalAdapter(listOf())
-        recyclerHospitals?.adapter = hospitalAdapter
+        placeAdapter = NearbyPlaceAdapter(listOf())
+        recyclerHospitals?.adapter = placeAdapter
 
         val cartoDbVoyager = XYTileSource(
             "CartoDBVoyager",
@@ -88,9 +102,14 @@ class MapFragment : Fragment(R.layout.fragment_map) {
         mapView.setTileSource(cartoDbVoyager)
         mapView.setMultiTouchControls(true)
         mapView.controller.setZoom(16.0)
-        mapView.controller.setCenter(GeoPoint(14.5995, 120.9842))
+
+        val defaultCenter = GeoPoint(14.5995, 120.9842)
+        mapView.controller.setCenter(defaultCenter)
 
         checkLocationPermissionAndSetup()
+
+        // 🔑 Agad na maglo-load ang listahan gamit ang default center para hindi blangko
+        fetchNearbyPlacesFromOSM(defaultCenter.latitude, defaultCenter.longitude)
 
         val familyCode = sessionManager.getFamilyCode() ?: ""
         val btnSos = requireActivity().findViewById<Button>(R.id.btn_rider_sos)
@@ -138,7 +157,7 @@ class MapFragment : Fragment(R.layout.fragment_map) {
                 if (userLocation != null) {
                     mapView.controller.animateTo(userLocation)
                     mapView.controller.setZoom(17.0)
-                    fetchHospitalsFromOSM(userLocation.latitude, userLocation.longitude)
+                    fetchNearbyPlacesFromOSM(userLocation.latitude, userLocation.longitude)
                 }
             }
         }
@@ -149,15 +168,6 @@ class MapFragment : Fragment(R.layout.fragment_map) {
             override fun run() {
                 val batteryPct = getBatteryPercentage()
                 tvBattery?.text = "$batteryPct%"
-
-                val userLocation = myLocationOverlay?.myLocation
-                if (userLocation != null) {
-                    val currentTime = System.currentTimeMillis()
-                    if (currentTime - lastHospitalFetchTime > 20000) {
-                        lastHospitalFetchTime = currentTime
-                        fetchHospitalsFromOSM(userLocation.latitude, userLocation.longitude)
-                    }
-                }
 
                 if (familyCode.isNotEmpty()) {
                     db.collection("families").document(familyCode)
@@ -176,15 +186,23 @@ class MapFragment : Fragment(R.layout.fragment_map) {
         })
     }
 
-    private fun fetchHospitalsFromOSM(lat: Double, lon: Double) {
+    private fun fetchNearbyPlacesFromOSM(lat: Double, lon: Double) {
         Thread {
+            val allPlaces = mutableListOf<NearbyPlace>()
             try {
-                val query = "[out:json];node(around:10000,$lat,$lon)[amenity=hospital];out body;"
+                // Lumingon sa paligid (10km radius) para hindi bumagal ang server
+                val query = "[out:json][timeout:15];(" +
+                        "nwr(around:10000,$lat,$lon)[amenity=hospital];" +
+                        "nwr(around:10000,$lat,$lon)[amenity=police];" +
+                        "nwr(around:10000,$lat,$lon)[amenity=fuel];" +
+                        ");out center;"
+
                 val url = URL("https://overpass-api.de/api/interpreter")
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "POST"
                 connection.doOutput = true
                 connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+                connection.setRequestProperty("User-Agent", "RiderEyePh (Contact: ridereyeph@gmail.com)")
 
                 val body = "data=" + URLEncoder.encode(query, "UTF-8")
                 connection.outputStream.write(body.toByteArray())
@@ -194,43 +212,78 @@ class MapFragment : Fragment(R.layout.fragment_map) {
                     val jsonObject = JSONObject(response)
                     val elements = jsonObject.getJSONArray("elements")
 
-                    val hospitalList = mutableListOf<Hospital>()
                     val userGeo = GeoPoint(lat, lon)
 
                     for (i in 0 until elements.length()) {
                         try {
                             val element = elements.getJSONObject(i)
-                            val hLat = element.getDouble("lat")
-                            val hLon = element.getDouble("lon")
+                            val pLat = if (element.has("lat")) element.getDouble("lat")
+                            else element.optJSONObject("center")?.optDouble("lat") ?: 0.0
+                            val pLon = if (element.has("lon")) element.getDouble("lon")
+                            else element.optJSONObject("center")?.optDouble("lon") ?: 0.0
+
+                            if (pLat == 0.0 || pLon == 0.0) continue
 
                             val tags = element.optJSONObject("tags")
-                            val name = tags?.optString("name", "Malapit na Ospital") ?: "Malapit na Ospital"
-                            val rawPhone = tags?.optString("phone") ?: tags?.optString("contact:phone") ?: "911"
-                            val phone = if (rawPhone.startsWith("tel:")) rawPhone else "tel:$rawPhone"
+                            val amenity = tags?.optString("amenity") ?: "hospital"
 
-                            val hGeo = GeoPoint(hLat, hLon)
-                            val distMeters = userGeo.distanceToAsDouble(hGeo)
+                            // Kunin ang mismong totoong pangalan o brand sa OSM (Tulad ng Jaen Police Station)
+                            val name = tags?.optString("name")
+                                ?: tags?.optString("brand")
+                                ?: tags?.optString("operator")
+                                ?: ""
+
+                            // Kung walang pangalan sa mapa, laktawan para puro may totoong pangalan ang lumabas
+                            if (name.isEmpty()) continue
+
+                            val rawPhone = tags?.optString("phone")
+                                ?: tags?.optString("contact:phone")
+                                ?: tags?.optString("mobile")
+                                ?: tags?.optString("contact:mobile")
+                                ?: ""
+
+                            val hasReal = rawPhone.isNotEmpty()
+                            val formattedPhone = if (hasReal) {
+                                if (rawPhone.startsWith("tel:")) rawPhone else "tel:$rawPhone"
+                            } else {
+                                "tel:911"
+                            }
+
+                            val pGeo = GeoPoint(pLat, pLon)
+                            val distMeters = userGeo.distanceToAsDouble(pGeo)
                             val distKm = distMeters / 1000.0
 
-                            hospitalList.add(Hospital(name, hLat, hLon, phone, distKm))
+                            allPlaces.add(NearbyPlace(name, amenity, pLat, pLon, formattedPhone, distKm, hasReal))
                         } catch (e: Exception) {
                             // Skip invalid nodes
                         }
                     }
 
-                    val top4Hospitals = hospitalList.sortedBy { it.distanceKm }.take(4)
+                    // Kunin ang pinakamalapit sa bawat kategorya na may totoong pangalan
+                    val nearestHospital = allPlaces.filter { it.type == "hospital" }.minByOrNull { it.distanceKm }
+                    val nearestPolice = allPlaces.filter { it.type == "police" }.minByOrNull { it.distanceKm }
+                    val nearestFuel = allPlaces.filter { it.type == "fuel" }.minByOrNull { it.distanceKm }
+
+                    val selectedPlaces = mutableListOf<NearbyPlace>()
+                    if (nearestHospital != null) selectedPlaces.add(nearestHospital)
+                    if (nearestPolice != null) selectedPlaces.add(nearestPolice)
+                    if (nearestFuel != null) selectedPlaces.add(nearestFuel)
+
+                    val finalPlaces = if (selectedPlaces.isEmpty()) {
+                        allPlaces.sortedBy { it.distanceKm }.take(4)
+                    } else {
+                        selectedPlaces.sortedBy { it.distanceKm }
+                    }
 
                     requireActivity().runOnUiThread {
-                        nearestHospitals = top4Hospitals
-                        hospitalAdapter.updateData(nearestHospitals)
+                        nearestPlaces = finalPlaces
+                        placeAdapter.updateData(nearestPlaces)
 
-                        if (nearestHospitals.isNotEmpty()) {
-                            val closest = nearestHospitals[0]
-                            val distanceKm = closest.distanceKm
-                            val etaMinutes = (distanceKm * 2).toInt().coerceAtLeast(1)
-                            tvDistanceEta?.text = String.format(Locale.getDefault(), "%.1fkm • %dm ETA", distanceKm, etaMinutes)
+                        if (nearestPlaces.isNotEmpty()) {
+                            val closest = nearestPlaces[0]
+                            tvDistanceEta?.text = String.format(Locale.getDefault(), "%.1fkm", closest.distanceKm)
                         } else {
-                            tvDistanceEta?.text = "Walang ospital"
+                            tvDistanceEta?.text = "0.0km"
                         }
                     }
                 }
@@ -240,49 +293,143 @@ class MapFragment : Fragment(R.layout.fragment_map) {
         }.start()
     }
 
-    // RecyclerView Adapter para sa patong-patong na ospital list
-    inner class HospitalAdapter(private var hospitals: List<Hospital>) :
-        RecyclerView.Adapter<HospitalAdapter.HospitalViewHolder>() {
+    inner class NearbyPlaceAdapter(private var places: List<NearbyPlace>) :
+        RecyclerView.Adapter<NearbyPlaceAdapter.PlaceViewHolder>() {
 
-        inner class HospitalViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        inner class PlaceViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val tvIcon: TextView = view.findViewById(R.id.tv_item_icon)
             val tvName: TextView = view.findViewById(R.id.tv_item_hospital_name)
             val tvDistance: TextView = view.findViewById(R.id.tv_item_hospital_distance)
-            val btnCall: Button = view.findViewById(R.id.btn_item_call)
-            val btnGo: Button = view.findViewById(R.id.btn_item_go)
+            val btnCall: ImageButton = view.findViewById(R.id.btn_item_call)
+            val btnGo: ImageButton = view.findViewById(R.id.btn_item_go)
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HospitalViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaceViewHolder {
             val view = LayoutInflater.from(parent.context).inflate(R.layout.item_hospital, parent, false)
-            return HospitalViewHolder(view)
+            return PlaceViewHolder(view)
         }
 
-        override fun onBindViewHolder(holder: HospitalViewHolder, position: Int) {
-            val hospital = hospitals[position]
-            holder.tvName.text = hospital.name
-            val etaMinutes = (hospital.distanceKm * 2).toInt().coerceAtLeast(1)
-            holder.tvDistance.text = String.format(Locale.getDefault(), "Hospital • %.1fkm • %d min", hospital.distanceKm, etaMinutes)
+        override fun onBindViewHolder(holder: PlaceViewHolder, position: Int) {
+            val place = places[position]
+            holder.tvName.text = place.name
 
-            // Button para tawagan ang tiyak na ospital
+            when (place.type) {
+                "hospital" -> {
+                    holder.tvIcon.text = "🏥"
+                    holder.tvDistance.text = String.format(Locale.getDefault(), "Hospital • %.1fkm", place.distanceKm)
+                }
+                "police" -> {
+                    holder.tvIcon.text = "🛡️"
+                    holder.tvDistance.text = String.format(Locale.getDefault(), "Police Station • %.1fkm", place.distanceKm)
+                }
+                "fuel" -> {
+                    holder.tvIcon.text = "⛽"
+                    holder.tvDistance.text = String.format(Locale.getDefault(), "Gas Station • %.1fkm", place.distanceKm)
+                }
+                else -> {
+                    holder.tvIcon.text = "📍"
+                    holder.tvDistance.text = String.format(Locale.getDefault(), "Lugar • %.1fkm", place.distanceKm)
+                }
+            }
+
             holder.btnCall.setOnClickListener {
-                val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse(hospital.phone))
+                if (!place.hasRealPhone) {
+                    Toast.makeText(holder.itemView.context, "Walang nakarehistrong numero ang ${place.name} sa mapa. Tumatawag sa 911.", Toast.LENGTH_LONG).show()
+                }
+                val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse(place.phone))
                 holder.itemView.context.startActivity(dialIntent)
             }
 
-            // Button para i-locate at ituro sa mapa ang tiyak na ospital
             holder.btnGo.setOnClickListener {
-                val hospitalPoint = GeoPoint(hospital.lat, hospital.lon)
-                mapView.controller.animateTo(hospitalPoint)
-                mapView.controller.setZoom(17.0)
-                Toast.makeText(holder.itemView.context, "Nilo-locate ang ${hospital.name}", Toast.LENGTH_SHORT).show()
+                myLocationOverlay?.disableFollowLocation()
+
+                val userLoc = myLocationOverlay?.myLocation
+                if (userLoc == null) {
+                    Toast.makeText(holder.itemView.context, "Naghihintay pa sa GPS location mo...", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                val destinationPoint = GeoPoint(place.lat, place.lon)
+
+                currentDestinationMarker?.let { mapView.overlays.remove(it) }
+                currentRoutePolyline?.let { mapView.overlays.remove(it) }
+
+                val destinationMarker = Marker(mapView).apply {
+                    setPosition(destinationPoint)
+                    title = place.name
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                }
+                mapView.overlays.add(destinationMarker)
+                currentDestinationMarker = destinationMarker
+                destinationMarker.showInfoWindow()
+
+                fetchAndDrawRoute(userLoc, destinationPoint)
+
+                mapView.controller.animateTo(destinationPoint)
+                mapView.controller.setZoom(16.0)
+
+                Toast.makeText(holder.itemView.context, "Pinapakita ang ruta papuntang ${place.name}", Toast.LENGTH_SHORT).show()
             }
         }
 
-        override fun getItemCount() = hospitals.size
+        override fun getItemCount() = places.size
 
-        fun updateData(newHospitals: List<Hospital>) {
-            hospitals = newHospitals
+        fun updateData(newPlaces: List<NearbyPlace>) {
+            places = newPlaces
             notifyDataSetChanged()
         }
+    }
+
+    private fun fetchAndDrawRoute(start: GeoPoint, destination: GeoPoint) {
+        Thread {
+            var routePoints = mutableListOf<GeoPoint>()
+            try {
+                val urlStr = "https://router.project-osrm.org/route/v1/driving/${start.longitude},${start.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson"
+                val url = URL(urlStr)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.setRequestProperty("User-Agent", "RiderEyePh (ridereyeph@gmail.com)")
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+
+                if (connection.responseCode == 200) {
+                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    val json = JSONObject(response)
+                    val routes = json.getJSONArray("routes")
+                    if (routes.length() > 0) {
+                        val geometry = routes.getJSONObject(0).getJSONObject("geometry")
+                        val coordinates = geometry.getJSONArray("coordinates")
+
+                        for (i in 0 until coordinates.length()) {
+                            val coord = coordinates.getJSONArray(i)
+                            val lon = coord.getDouble(0)
+                            val lat = coord.getDouble(1)
+                            routePoints.add(GeoPoint(lat, lon))
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            if (routePoints.isEmpty()) {
+                routePoints.add(start)
+                routePoints.add(destination)
+            }
+
+            requireActivity().runOnUiThread {
+                currentRoutePolyline?.let { mapView.overlays.remove(it) }
+
+                val polyline = Polyline().apply {
+                    setPoints(routePoints)
+                    outlinePaint.color = Color.parseColor("#00B0FF")
+                    outlinePaint.strokeWidth = 12f
+                }
+                mapView.overlays.add(polyline)
+                currentRoutePolyline = polyline
+                mapView.invalidate()
+            }
+        }.start()
     }
 
     private fun getBatteryPercentage(): Int {

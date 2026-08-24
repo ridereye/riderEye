@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import org.mindrot.jbcrypt.BCrypt
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -54,9 +55,12 @@ class ForgotPasswordActivity : AppCompatActivity() {
                     // Get matching document ID
                     val docId = query.documents[0].id
 
-                    // Update password field
+                    // 🛠️ GAWIN ITO: I-hash muna ang bagong password gamit ang BCrypt bago i-save
+                    val hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt())
+
+                    // Update password field gamit ang hashed password
                     usersCollection.document(docId)
-                        .update("password", newPassword)
+                        .update("password", hashedPassword)
                         .await()
 
                     withContext(Dispatchers.Main) {

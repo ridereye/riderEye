@@ -1,23 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="@android:color/white">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="14dp"
-        android:gravity="center_vertical">
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="8dp">
 
+        <!-- ICON NG LUGAR (H para sa Hospital, atbp.) -->
+        <TextView
+            android:id="@+id/tv_item_icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="#F0F0F0"
+            android:gravity="center"
+            android:text="🏥"
+            android:textSize="16sp" />
+
+        <!-- PANGALAN AT DISTANSYA -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -25,34 +34,44 @@
                 android:id="@+id/tv_item_hospital_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textSize="15sp"
-                android:textColor="@android:color/black" />
+                android:textColor="#000000"
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tv_item_hospital_distance"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:textColor="@android:color/darker_gray"
-                android:layout_marginTop="2dp"/>
+                android:textColor="#666666"
+                android:textSize="11sp" />
         </LinearLayout>
 
-        <Button
+        <!-- CALL BUTTON (Ginawang ImageButton para lumitaw ang telepono icon) -->
+        <ImageButton
             android:id="@+id/btn_item_call"
-            android:layout_width="wrap_content"
-            android:layout_height="38dp"
-            android:text="Call"
-            android:textSize="11sp"
-            android:minWidth="65dp"
-            android:layout_marginEnd="6dp"/>
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/circle_button_bg"
+            android:src="@android:drawable/ic_menu_call"
+            android:scaleType="centerInside"
+            android:contentDescription="Call" />
 
-        <Button
+        <!-- GO BUTTON (Bilog na may asul o kulay) -->
+        <ImageButton
             android:id="@+id/btn_item_go"
-            android:layout_width="wrap_content"
-            android:layout_height="38dp"
-            android:text="Locate"
-            android:textSize="11sp"
-            android:minWidth="65dp"/>
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/circle_blue_bg"
+            android:src="@android:drawable/ic_menu_directions"
+            android:scaleType="centerInside"
+            android:tint="#FFFFFF"
+            android:contentDescription="Go" />
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+
+    <!-- Manipis na guhit sa pagitan ng mga item -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F0F0F0" />
+</LinearLayout>
