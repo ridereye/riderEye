@@ -35,9 +35,7 @@ class RiderHomeActivity : AppCompatActivity() {
         }
 
         findViewById<LinearLayout>(R.id.nav_map).setOnClickListener { loadFragment(MapFragment()) }
-        findViewById<LinearLayout>(R.id.nav_safety).setOnClickListener {
-            Toast.makeText(this, "Safety feature", Toast.LENGTH_SHORT).show()
-        }
+        findViewById<LinearLayout>(R.id.nav_safety).setOnClickListener { loadFragment(SafetyFragment()) }
         findViewById<LinearLayout>(R.id.nav_bell).setOnClickListener {
             Toast.makeText(this, "Notifications", Toast.LENGTH_SHORT).show()
         }
