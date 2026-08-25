@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0F0F14"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="28dp"
+        android:gravity="center_horizontal">
+
+        <!-- LOGO HEADER -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:text="RIDER EYE PH"
+            android:textColor="#1E90FF"
+            android:textSize="30sp"
+            android:textStyle="bold|italic" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="LOG-IN"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Login your account to continue"
+            android:textColor="#8A8A8E"
+            android:textSize="12sp"
+            android:layout_marginBottom="32dp" />
+
+        <!-- USERNAME FIELD -->
+        <EditText
+            android:id="@+id/et_username"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="14dp"
+            android:background="#1E1E28"
+            android:hint="Username"
+            android:textColorHint="#6E6E7A"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="16dp"
+            android:inputType="text" />
+
+        <!-- PASSWORD FIELD -->
+        <EditText
+            android:id="@+id/et_password"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginBottom="8dp"
+            android:background="#1E1E28"
+            android:hint="Password"
+            android:textColorHint="#6E6E7A"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="16dp"
+            android:inputType="textPassword" />
+
+        <!-- FORGOT PASSWORD LINK -->
+        <TextView
+            android:id="@+id/btn_forgot_password"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="Forgot Password?"
+            android:textColor="#1E90FF"
+            android:textSize="13sp"
+            android:padding="4dp"
+            android:layout_marginBottom="28dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- LOGIN BUTTON ROW WITH BIOMETRIC -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/btn_login"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:text="LOG-IN"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#990000" />
+
+            <!-- BIOMETRIC ICON BUTTON -->
+            <ImageButton
+                android:id="@+id/btn_biometric"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginStart="10dp"
+                android:background="#1E1E28"
+                android:src="@android:drawable/ic_lock_lock"
+                android:contentDescription="Biometric Login"
+                android:padding="12dp"
+                android:backgroundTint="#1E1E28" />
+        </LinearLayout>
+
+        <!-- SEPARATOR / OR -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="OR"
+            android:textColor="#6E6E7A"
+            android:textSize="12sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- SIGN UP BUTTON -->
+        <Button
+            android:id="@+id/btn_goto_signup"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="CREATE ACCOUNT"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#1E1E28" />
+
+    </LinearLayout>
+</ScrollView>
