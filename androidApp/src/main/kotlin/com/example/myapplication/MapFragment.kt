@@ -5,17 +5,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
 import android.os.BatteryManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.preference.PreferenceManager
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -23,9 +19,8 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
-import org.json.JSONObject
 import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.XYTileSource
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -34,7 +29,6 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.net.HttpURLConnection
 import java.net.URL
-import java.net.URLEncoder
 import java.util.Locale
 
 class MapFragment : Fragment(R.layout.fragment_map) {
@@ -55,18 +49,7 @@ class MapFragment : Fragment(R.layout.fragment_map) {
     private val handler = Handler(Looper.getMainLooper())
     private val LOCATION_PERMISSION_REQUEST_CODE = 101
 
-    data class NearbyPlace(
-        val name: String,
-        val type: String,
-        val lat: Double,
-        val lon: Double,
-        val phone: String,
-        var distanceKm: Double = 0.0,
-        val hasRealPhone: Boolean = true
-    )
-
     private var nearestPlaces: List<NearbyPlace> = listOf()
-    private var lastPlaceFetchTime: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,18 +71,16 @@ class MapFragment : Fragment(R.layout.fragment_map) {
         recyclerHospitals = view.findViewById(R.id.recycler_hospitals)
 
         recyclerHospitals?.layoutManager = LinearLayoutManager(requireContext())
-        placeAdapter = NearbyPlaceAdapter(listOf())
+        // "Go" dito ay gumagawa ng route sa mismong MapView (dati itong nasa loob
+        // ng inner adapter class — ngayon callback na lang dahil shared adapter na ito)
+        placeAdapter = NearbyPlaceAdapter(listOf()) { place -> goToPlaceOnMap(place) }
         recyclerHospitals?.adapter = placeAdapter
 
-        val cartoDbVoyager = XYTileSource(
-            "CartoDBVoyager",
-            0, 19, 256, ".png", arrayOf(
-                "https://basemaps.cartocdn.com/rastertiles/voyager/"
-            ),
-            "© OpenStreetMap contributors © CARTO"
-        )
+        // Libreng OpenStreetMap "Mapnik" tiles — built-in na sa osmdroid, walang
+        // kailangang API key (dating CartoDB Voyager ito, pero nag-require na
+        // ngayon ang CARTO ng key kahit sa free tier nila).
         mapView = view.findViewById(R.id.map_fragment_item)
-        mapView.setTileSource(cartoDbVoyager)
+        mapView.setTileSource(TileSourceFactory.MAPNIK)
         mapView.setMultiTouchControls(true)
         mapView.controller.setZoom(16.0)
 
@@ -109,7 +90,7 @@ class MapFragment : Fragment(R.layout.fragment_map) {
         checkLocationPermissionAndSetup()
 
         // 🔑 Agad na maglo-load ang listahan gamit ang default center para hindi blangko
-        fetchNearbyPlacesFromOSM(defaultCenter.latitude, defaultCenter.longitude)
+        loadNearbyPlaces(defaultCenter.latitude, defaultCenter.longitude)
 
         val familyCode = sessionManager.getFamilyCode() ?: ""
         val btnSos = requireActivity().findViewById<Button>(R.id.btn_rider_sos)
@@ -157,7 +138,7 @@ class MapFragment : Fragment(R.layout.fragment_map) {
                 if (userLocation != null) {
                     mapView.controller.animateTo(userLocation)
                     mapView.controller.setZoom(17.0)
-                    fetchNearbyPlacesFromOSM(userLocation.latitude, userLocation.longitude)
+                    loadNearbyPlaces(userLocation.latitude, userLocation.longitude)
                 }
             }
         }
@@ -186,198 +167,53 @@ class MapFragment : Fragment(R.layout.fragment_map) {
         })
     }
 
-    private fun fetchNearbyPlacesFromOSM(lat: Double, lon: Double) {
-        Thread {
-            val allPlaces = mutableListOf<NearbyPlace>()
-            try {
-                // Lumingon sa paligid (10km radius) para hindi bumagal ang server
-                val query = "[out:json][timeout:15];(" +
-                        "nwr(around:10000,$lat,$lon)[amenity=hospital];" +
-                        "nwr(around:10000,$lat,$lon)[amenity=police];" +
-                        "nwr(around:10000,$lat,$lon)[amenity=fuel];" +
-                        ");out center;"
+    /**
+     * Dating "fetchNearbyPlacesFromOSM" — ngayon tumatawag na lang sa shared
+     * NearbyPlacesFetcher, tapos ina-update ang RecyclerView at distance/ETA text.
+     */
+    private fun loadNearbyPlaces(lat: Double, lon: Double) {
+        NearbyPlacesFetcher.fetchNearestEmergencyPlaces(lat, lon) { places ->
+            nearestPlaces = places
+            placeAdapter.updateData(nearestPlaces)
 
-                val url = URL("https://overpass-api.de/api/interpreter")
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "POST"
-                connection.doOutput = true
-                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-                connection.setRequestProperty("User-Agent", "RiderEyePh (Contact: ridereyeph@gmail.com)")
-
-                val body = "data=" + URLEncoder.encode(query, "UTF-8")
-                connection.outputStream.write(body.toByteArray())
-
-                if (connection.responseCode == 200) {
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject = JSONObject(response)
-                    val elements = jsonObject.getJSONArray("elements")
-
-                    val userGeo = GeoPoint(lat, lon)
-
-                    for (i in 0 until elements.length()) {
-                        try {
-                            val element = elements.getJSONObject(i)
-                            val pLat = if (element.has("lat")) element.getDouble("lat")
-                            else element.optJSONObject("center")?.optDouble("lat") ?: 0.0
-                            val pLon = if (element.has("lon")) element.getDouble("lon")
-                            else element.optJSONObject("center")?.optDouble("lon") ?: 0.0
-
-                            if (pLat == 0.0 || pLon == 0.0) continue
-
-                            val tags = element.optJSONObject("tags")
-                            val amenity = tags?.optString("amenity") ?: "hospital"
-
-                            // Kunin ang mismong totoong pangalan o brand sa OSM (Tulad ng Jaen Police Station)
-                            val name = tags?.optString("name")
-                                ?: tags?.optString("brand")
-                                ?: tags?.optString("operator")
-                                ?: ""
-
-                            // Kung walang pangalan sa mapa, laktawan para puro may totoong pangalan ang lumabas
-                            if (name.isEmpty()) continue
-
-                            val rawPhone = tags?.optString("phone")
-                                ?: tags?.optString("contact:phone")
-                                ?: tags?.optString("mobile")
-                                ?: tags?.optString("contact:mobile")
-                                ?: ""
-
-                            val hasReal = rawPhone.isNotEmpty()
-                            val formattedPhone = if (hasReal) {
-                                if (rawPhone.startsWith("tel:")) rawPhone else "tel:$rawPhone"
-                            } else {
-                                "tel:911"
-                            }
-
-                            val pGeo = GeoPoint(pLat, pLon)
-                            val distMeters = userGeo.distanceToAsDouble(pGeo)
-                            val distKm = distMeters / 1000.0
-
-                            allPlaces.add(NearbyPlace(name, amenity, pLat, pLon, formattedPhone, distKm, hasReal))
-                        } catch (e: Exception) {
-                            // Skip invalid nodes
-                        }
-                    }
-
-                    // Kunin ang pinakamalapit sa bawat kategorya na may totoong pangalan
-                    val nearestHospital = allPlaces.filter { it.type == "hospital" }.minByOrNull { it.distanceKm }
-                    val nearestPolice = allPlaces.filter { it.type == "police" }.minByOrNull { it.distanceKm }
-                    val nearestFuel = allPlaces.filter { it.type == "fuel" }.minByOrNull { it.distanceKm }
-
-                    val selectedPlaces = mutableListOf<NearbyPlace>()
-                    if (nearestHospital != null) selectedPlaces.add(nearestHospital)
-                    if (nearestPolice != null) selectedPlaces.add(nearestPolice)
-                    if (nearestFuel != null) selectedPlaces.add(nearestFuel)
-
-                    val finalPlaces = if (selectedPlaces.isEmpty()) {
-                        allPlaces.sortedBy { it.distanceKm }.take(4)
-                    } else {
-                        selectedPlaces.sortedBy { it.distanceKm }
-                    }
-
-                    requireActivity().runOnUiThread {
-                        nearestPlaces = finalPlaces
-                        placeAdapter.updateData(nearestPlaces)
-
-                        if (nearestPlaces.isNotEmpty()) {
-                            val closest = nearestPlaces[0]
-                            tvDistanceEta?.text = String.format(Locale.getDefault(), "%.1fkm", closest.distanceKm)
-                        } else {
-                            tvDistanceEta?.text = "0.0km"
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
+            if (nearestPlaces.isNotEmpty()) {
+                val closest = nearestPlaces[0]
+                tvDistanceEta?.text = String.format(Locale.getDefault(), "%.1fkm", closest.distanceKm)
+            } else {
+                tvDistanceEta?.text = "0.0km"
             }
-        }.start()
+        }
     }
 
-    inner class NearbyPlaceAdapter(private var places: List<NearbyPlace>) :
-        RecyclerView.Adapter<NearbyPlaceAdapter.PlaceViewHolder>() {
+    private fun goToPlaceOnMap(place: NearbyPlace) {
+        myLocationOverlay?.disableFollowLocation()
 
-        inner class PlaceViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val tvIcon: TextView = view.findViewById(R.id.tv_item_icon)
-            val tvName: TextView = view.findViewById(R.id.tv_item_hospital_name)
-            val tvDistance: TextView = view.findViewById(R.id.tv_item_hospital_distance)
-            val btnCall: ImageButton = view.findViewById(R.id.btn_item_call)
-            val btnGo: ImageButton = view.findViewById(R.id.btn_item_go)
+        val userLoc = myLocationOverlay?.myLocation
+        if (userLoc == null) {
+            Toast.makeText(requireContext(), "Naghihintay pa sa GPS location mo...", Toast.LENGTH_SHORT).show()
+            return
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaceViewHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_hospital, parent, false)
-            return PlaceViewHolder(view)
+        val destinationPoint = GeoPoint(place.lat, place.lon)
+
+        currentDestinationMarker?.let { mapView.overlays.remove(it) }
+        currentRoutePolyline?.let { mapView.overlays.remove(it) }
+
+        val destinationMarker = Marker(mapView).apply {
+            setPosition(destinationPoint)
+            title = place.name
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         }
+        mapView.overlays.add(destinationMarker)
+        currentDestinationMarker = destinationMarker
+        destinationMarker.showInfoWindow()
 
-        override fun onBindViewHolder(holder: PlaceViewHolder, position: Int) {
-            val place = places[position]
-            holder.tvName.text = place.name
+        fetchAndDrawRoute(userLoc, destinationPoint)
 
-            when (place.type) {
-                "hospital" -> {
-                    holder.tvIcon.text = "🏥"
-                    holder.tvDistance.text = String.format(Locale.getDefault(), "Hospital • %.1fkm", place.distanceKm)
-                }
-                "police" -> {
-                    holder.tvIcon.text = "🛡️"
-                    holder.tvDistance.text = String.format(Locale.getDefault(), "Police Station • %.1fkm", place.distanceKm)
-                }
-                "fuel" -> {
-                    holder.tvIcon.text = "⛽"
-                    holder.tvDistance.text = String.format(Locale.getDefault(), "Gas Station • %.1fkm", place.distanceKm)
-                }
-                else -> {
-                    holder.tvIcon.text = "📍"
-                    holder.tvDistance.text = String.format(Locale.getDefault(), "Lugar • %.1fkm", place.distanceKm)
-                }
-            }
+        mapView.controller.animateTo(destinationPoint)
+        mapView.controller.setZoom(16.0)
 
-            holder.btnCall.setOnClickListener {
-                if (!place.hasRealPhone) {
-                    Toast.makeText(holder.itemView.context, "Walang nakarehistrong numero ang ${place.name} sa mapa. Tumatawag sa 911.", Toast.LENGTH_LONG).show()
-                }
-                val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse(place.phone))
-                holder.itemView.context.startActivity(dialIntent)
-            }
-
-            holder.btnGo.setOnClickListener {
-                myLocationOverlay?.disableFollowLocation()
-
-                val userLoc = myLocationOverlay?.myLocation
-                if (userLoc == null) {
-                    Toast.makeText(holder.itemView.context, "Naghihintay pa sa GPS location mo...", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-
-                val destinationPoint = GeoPoint(place.lat, place.lon)
-
-                currentDestinationMarker?.let { mapView.overlays.remove(it) }
-                currentRoutePolyline?.let { mapView.overlays.remove(it) }
-
-                val destinationMarker = Marker(mapView).apply {
-                    setPosition(destinationPoint)
-                    title = place.name
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                }
-                mapView.overlays.add(destinationMarker)
-                currentDestinationMarker = destinationMarker
-                destinationMarker.showInfoWindow()
-
-                fetchAndDrawRoute(userLoc, destinationPoint)
-
-                mapView.controller.animateTo(destinationPoint)
-                mapView.controller.setZoom(16.0)
-
-                Toast.makeText(holder.itemView.context, "Pinapakita ang ruta papuntang ${place.name}", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        override fun getItemCount() = places.size
-
-        fun updateData(newPlaces: List<NearbyPlace>) {
-            places = newPlaces
-            notifyDataSetChanged()
-        }
+        Toast.makeText(requireContext(), "Pinapakita ang ruta papuntang ${place.name}", Toast.LENGTH_SHORT).show()
     }
 
     private fun fetchAndDrawRoute(start: GeoPoint, destination: GeoPoint) {
@@ -394,7 +230,7 @@ class MapFragment : Fragment(R.layout.fragment_map) {
 
                 if (connection.responseCode == 200) {
                     val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val json = JSONObject(response)
+                    val json = org.json.JSONObject(response)
                     val routes = json.getJSONArray("routes")
                     if (routes.length() > 0) {
                         val geometry = routes.getJSONObject(0).getJSONObject("geometry")
@@ -417,7 +253,12 @@ class MapFragment : Fragment(R.layout.fragment_map) {
                 routePoints.add(destination)
             }
 
-            requireActivity().runOnUiThread {
+            // activity?.runOnUiThread (hindi requireActivity()) para hindi mag-crash
+            // kapag naiwan ang Thread na 'to habang naka-alis na sa fragment/tab.
+            // Dinoble pang chinecheck ang isAdded sa loob para sigurado.
+            activity?.runOnUiThread {
+                if (!isAdded) return@runOnUiThread
+
                 currentRoutePolyline?.let { mapView.overlays.remove(it) }
 
                 val polyline = Polyline().apply {
