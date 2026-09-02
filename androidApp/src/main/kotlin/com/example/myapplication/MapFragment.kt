@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -59,6 +59,23 @@ class MapFragment : Fragment(R.layout.fragment_map) {
             PreferenceManager.getDefaultSharedPreferences(requireContext())
         )
         Configuration.getInstance().userAgentValue = "RiderEyePh (Contact: ridereyeph@gmail.com)"
+
+        // Palakihin ang disk cache (default ay medyo mababa) — para once
+        // na-download na ang tiles ng isang lugar (hal. Jaen, Nueva Ecija),
+        // mananatili ito nang mas matagal sa cache at hindi na paulit-ulit
+        // dina-download tuwing babalikan mo ang parehong area. Malaking
+        // tulong ito lalo na sa mabagal o unstable na mobile data.
+        Configuration.getInstance().tileFileSystemCacheMaxBytes = 300L * 1024 * 1024 // 300MB
+        Configuration.getInstance().tileFileSystemCacheTrimBytes = 250L * 1024 * 1024 // 250MB
+
+        // Default lang ng osmdroid ay 2 concurrent tile downloads kasabay —
+        // kaya "unti-unti"/isa-isa lumalabas ang mapa kahit malakas ang
+        // signal. Dinagdagan dito para sabay-sabay na madodownload ang
+        // mas maraming tiles, mas mabilis mapuno ang screen.
+        Configuration.getInstance().tileDownloadThreads = 8
+        Configuration.getInstance().tileFileSystemThreads = 8
+        Configuration.getInstance().tileDownloadMaxQueueSize = 40
+        Configuration.getInstance().tileFileSystemMaxQueueSize = 40
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -76,13 +93,21 @@ class MapFragment : Fragment(R.layout.fragment_map) {
         placeAdapter = NearbyPlaceAdapter(listOf()) { place -> goToPlaceOnMap(place) }
         recyclerHospitals?.adapter = placeAdapter
 
-        // Libreng OpenStreetMap "Mapnik" tiles — built-in na sa osmdroid, walang
-        // kailangang API key (dating CartoDB Voyager ito, pero nag-require na
-        // ngayon ang CARTO ng key kahit sa free tier nila).
+        // Mapbox Streets style tiles — 256px (walang size segment sa URL, kaya
+        // default 256px na compatible agad sa osmdroid, walang kailangang
+        // zoom-offset adjustment). Palitan ang YOUR_MAPBOX_ACCESS_TOKEN ng
+        // sarili mong public token mula sa account.mapbox.com (nagsisimula sa "pk.").
+        val mapboxStreets = XYTileSource(
+            "MapboxStreets",
+            0, 19, 256, "?access_token=" + BuildConfig.MAPBOX_ACCESS_TOKEN, arrayOf(
+                "https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/"
+            ),
+            "© Mapbox © OpenStreetMap contributors"
+        )
         mapView = view.findViewById(R.id.map_fragment_item)
-        mapView.setTileSource(TileSourceFactory.MAPNIK)
+        mapView.setTileSource(mapboxStreets)
         mapView.setMultiTouchControls(true)
-        mapView.controller.setZoom(16.0)
+        mapView.controller.setZoom(14.0)
 
         val defaultCenter = GeoPoint(14.5995, 120.9842)
         mapView.controller.setCenter(defaultCenter)
@@ -137,7 +162,7 @@ class MapFragment : Fragment(R.layout.fragment_map) {
                 val userLocation = myLocationOverlay?.myLocation
                 if (userLocation != null) {
                     mapView.controller.animateTo(userLocation)
-                    mapView.controller.setZoom(17.0)
+                    mapView.controller.setZoom(15.0)
                     loadNearbyPlaces(userLocation.latitude, userLocation.longitude)
                 }
             }
