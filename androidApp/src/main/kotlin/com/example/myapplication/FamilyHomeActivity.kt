@@ -26,6 +26,17 @@ class FamilyHomeActivity : AppCompatActivity() {
     private var sosListener: ListenerRegistration? = null
     private var connectedRiderId: String? = null
 
+    // 📋 SOS Type Labels — para madaling basahin
+    private fun getSosDisplayMessage(sosType: String?): String {
+        return when (sosType) {
+            "accident"     -> "🚨 ACCIDENT / CRASH reported by Rider!"
+            "mechanical"   -> "🔧 MECHANICAL BREAKDOWN reported by Rider!"
+            "medical"      -> "🏥 MEDICAL EMERGENCY reported by Rider!"
+            "holdup"       -> "⚠️ HOLDUP / CRIME reported by Rider — IMMEDIATE HELP NEEDED!"
+            else           -> "🚨 RIDER SOS ALERT — Emergency!"
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_family_home)
@@ -183,6 +194,7 @@ class FamilyHomeActivity : AppCompatActivity() {
         }
     }
 
+    // ✅ UPDATED: BABASAHIN NA ANG SOS TYPE AT IPAPAKITA ANG DETALYE
     private fun listenForSosAlerts(riderId: String) {
         val layoutSosBanner = findViewById<LinearLayout>(R.id.layout_sos_banner)
         val tvSosMessage = findViewById<TextView>(R.id.tv_sos_message)
@@ -196,8 +208,15 @@ class FamilyHomeActivity : AppCompatActivity() {
 
                 val active = snapshot.getBoolean("active") ?: false
                 if (active) {
-                    tvSosMessage.text = "🚨 RIDER SOS ALERT! ($riderId)"
+                    // 🆘 BASAHIN ANG SOS TYPE MULA FIREBASE
+                    val sosType = snapshot.getString("sos_type") // ← accident / mechanical / medical / holdup
+                    val message = getSosDisplayMessage(sosType)
+
+                    tvSosMessage.text = message
                     layoutSosBanner.visibility = View.VISIBLE
+
+                    // ✅ Opsyonal: Mag-vibrate o tumunog kapag may SOS
+                    // vibratePhone()
                 } else {
                     layoutSosBanner.visibility = View.GONE
                 }
